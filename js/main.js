@@ -59,25 +59,28 @@ const el = (tag, cls, txt) => {
   text('footerCopyright', CONTENT.footer.copyright);
 })();
 
-/* ---------- פרויקטים: השוואת לפני ואחרי ----------
-   כל כרטיס מציג את שני המצבים זה מעל זה. שכבת ה"לפני" נחתכת לפי
-   --pos, ופס גרירה (input range שקוף מעל כל התמונה) מזיז את הקו.
-   ב-RTL ה"לפני" יושב בצד ימין, כך שהקו נגרר בכיוון הקריאה.         */
+/* ---------- פרויקטים: גלריית תמונות וסרטונים ----------
+   כל כרטיס מציג מסילה אופקית של שקופיות (scroll-snap) — מחליקים
+   באצבע, גוללים בטאצ'פד או לוחצים על החיצים. מונה בפינה מראה
+   באיזו שקופית נמצאים, וסרטון מתנגן רק כשהשקופית שלו מוצגת.     */
 (function(){
   const W = CONTENT.work;
   const host = document.getElementById('projects');
 
   /* ---------- איתור הקבצים בתיקיית הפרויקט ----------
      אתר סטטי לא יכול לקרוא את רשימת הקבצים בתיקייה, ולכן מנסים את
-     השמות הצפויים (before.jpg, before.mp4 ...) ובודקים מה נטען בפועל.
-     הסדר ברשימה הוא סדר העדיפות: וידאו, אחר כך תמונה, ורק בסוף ה-SVG
-     הזמני — כך שקובץ אמיתי גובר עליו מעצמו.
+     השמות הצפויים (1.jpg, 1.mp4, 2.jpg ...) ובודקים מה נטען בפועל,
+     מספר אחרי מספר, עד המספר הראשון שאין לו אף קובץ.
+     בכל מספר הסדר הוא סדר העדיפות: וידאו, אחר כך תמונה, ורק בסוף
+     ה-SVG הזמני. אם נמצא בתיקייה ולו קובץ אמיתי אחד, ה-SVG-ים
+     הזמניים מוסתרים כולם.
      הבדיקה עובדת גם בפתיחה ישירה של index.html מהמחשב (file://),
      כי היא טוענת את הקבצים כמו הדפדפן ולא דרך fetch.                  */
   const MEDIA_ROOT = 'media/';
-  const VIDEO_EXT  = ['mp4', 'webm'];
+  const VIDEO_EXT  = ['mp4', 'webm', 'mov'];
   const IMAGE_EXT  = ['jpg', 'jpeg', 'png', 'webp'];
   const TEMP_EXT   = ['svg'];
+  const MAX_ITEMS  = 60;
 
   const probeImage = src => new Promise(ok => {
     const i = new Image();
@@ -95,9 +98,9 @@ const el = (tag, cls, txt) => {
   });
   const first = list => list.find(Boolean) || null;
 
-  /* מחזיר { type, src, poster } לצד אחד של הפרויקט, או null אם אין כלום */
-  async function findMedia(folder, side){
-    const base = MEDIA_ROOT + folder + '/' + side + '.';
+  /* מחזיר { type, src, poster } למספר אחד בתיקייה, או null אם אין כלום */
+  async function findItem(folder, n){
+    const base = MEDIA_ROOT + folder + '/' + n + '.';
     const [videos, images, temps] = await Promise.all([
       Promise.all(VIDEO_EXT.map(e => probeVideo(base + e))),
       Promise.all(IMAGE_EXT.map(e => probeImage(base + e))),
@@ -110,66 +113,151 @@ const el = (tag, cls, txt) => {
     return null;
   }
 
+  /* רשימה מפורשת ב-content.js גוברת על החיפוש האוטומטי */
+  async function findMedia(p){
+    if (Array.isArray(p.media) && p.media.length){
+      return p.media.map(name => {
+        const ext = String(name).split('.').pop().toLowerCase();
+        return { type: VIDEO_EXT.includes(ext) ? 'video' : 'image', src: MEDIA_ROOT + p.folder + '/' + name };
+      });
+    }
+    const items = [];
+    for (let n = 1; n <= MAX_ITEMS; n++){
+      const m = await findItem(p.folder, n);
+      if (!m) break;
+      items.push(m);
+    }
+    const real = items.filter(m => !m.temp);
+    return real.length ? real : items;
+  }
+
   function mediaEl(m, alt){
     if (m.type === 'video'){
-      const v = el('video', 'ba__media');
-      Object.assign(v, { src:m.src, muted:true, loop:true, autoplay:true, playsInline:true, preload:'metadata' });
+      const v = el('video', 'gal__media');
+      Object.assign(v, { src:m.src, muted:true, loop:true, playsInline:true, preload:'metadata' });
       v.setAttribute('aria-label', alt);
       if (m.poster) v.poster = m.poster;
       return v;
     }
-    const img = el('img', 'ba__media');
+    const img = el('img', 'gal__media');
     Object.assign(img, { src:m.src, alt, decoding:'async' });
     return img;
   }
 
   /* מסגרת ריקה — מוצגת בזמן החיפוש, ונשארת אם בתיקייה אין אף קובץ */
-  function emptyFrame(side){
-    const ph = el('div', 'ba__ph');
+  function emptyFrame(){
+    const ph = el('div', 'gal__ph');
     ph.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><circle cx="8.5" cy="10" r="1.8"/><path d="M21.5 16l-5.5-5.5L6 19.5"/></svg>';
-    ph.append(el('span', null, side + ' · ' + W.placeholder));
+    ph.append(el('span', null, W.placeholder));
     return ph;
   }
 
-  /* ממלא שכבה אחת (לפני / אחרי) ברגע שהקובץ נמצא */
-  async function fill(layer, folder, side, label, title){
-    const m = await findMedia(folder, side);
-    if (!m) return;
-    layer.querySelector('.ba__ph')?.replaceWith(mediaEl(m, label + ' — ' + title));
-    if (m.temp) layer.classList.add('is-temp');
+  const ARROW = d => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>';
+
+  /* בונה את הגלריה של כרטיס אחד ומחזיר את האלמנט שלה */
+  function gallery(p){
+    const gal   = el('div', 'gal');
+    const track = el('div', 'gal__track');
+    track.tabIndex = 0;
+    track.setAttribute('role', 'group');
+    track.setAttribute('aria-label', p.title);
+    const slide = el('div', 'gal__slide');
+    slide.append(emptyFrame());
+    track.append(slide);
+
+    /* ב-RTL "הקודם" יושב מימין והחץ שלו מצביע ימינה */
+    const prev = el('button', 'gal__nav gal__prev');
+    const next = el('button', 'gal__nav gal__next');
+    prev.type = next.type = 'button';
+    prev.setAttribute('aria-label', W.prev);
+    next.setAttribute('aria-label', W.next);
+    prev.innerHTML = ARROW('M9 6l6 6-6 6');
+    next.innerHTML = ARROW('M15 6l-6 6 6 6');
+    const count = el('span', 'gal__count ltr');
+
+    gal.append(track, prev, next, count);
+    gal._track = track;
+    return gal;
+  }
+
+  /* ממלא את הגלריה ברגע שהקבצים נמצאו, ומחבר את הניווט */
+  async function fill(gal, p){
+    const items = await findMedia(p);
+    if (!items.length) return;
+    const track = gal._track;
+    const slides = items.map((m, i) => {
+      const s = el('div', 'gal__slide');
+      s.append(mediaEl(m, p.title + ' — ' + (i + 1) + '/' + items.length));
+      return s;
+    });
+    track.replaceChildren(...slides);
+    if (items.some(m => m.temp)) gal.classList.add('is-temp');
+
+    const total = slides.length;
+    const count = gal.querySelector('.gal__count');
+    const prev  = gal.querySelector('.gal__prev');
+    const next  = gal.querySelector('.gal__next');
+    gal.classList.toggle('is-multi', total > 1);
+
+    /* ב-RTL scrollLeft יורד לשלילי, ולכן עובדים עם הערך המוחלט
+       ומכפילים בכיוון בזמן גלילה                                  */
+    const dir = getComputedStyle(track).direction === 'rtl' ? -1 : 1;
+    let current = -1;
+    const update = () => {
+      const i = Math.min(total - 1, Math.round(Math.abs(track.scrollLeft) / (track.clientWidth || 1)));
+      if (i === current) return;
+      current = i;
+      count.textContent = (i + 1) + ' / ' + total;
+      prev.disabled = i === 0;
+      next.disabled = i === total - 1;
+      slides.forEach((s, k) => {
+        const v = s.querySelector('video');
+        if (!v) return;
+        if (k === i && gal._visible) v.play().catch(()=>{});
+        else v.pause();
+      });
+    };
+    gal._update = () => { current = -1; update(); };
+    const go = step => track.scrollBy({ left: dir * step * track.clientWidth, behavior:'smooth' });
+    prev.addEventListener('click', () => go(-1));
+    next.addEventListener('click', () => go(1));
+    track.addEventListener('keydown', e => {
+      /* בגלריה מימין לשמאל, חץ שמאלה = הבא */
+      if (e.key === 'ArrowLeft'){ e.preventDefault(); go(dir === -1 ? 1 : -1); }
+      if (e.key === 'ArrowRight'){ e.preventDefault(); go(dir === -1 ? -1 : 1); }
+    });
+    let raf = 0;
+    track.addEventListener('scroll', () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => { raf = 0; update(); });
+    }, { passive:true });
+    update();
   }
 
   /* החיפוש מתחיל רק כשהכרטיס מתקרב למסך, כדי לא לטעון את כל
      הגלריה מראש. בלי IntersectionObserver — טוענים הכול מיד.     */
-  const load = card => {
-    const { folder, title } = card._project;
-    if (!folder) return;
-    fill(card.querySelector('.ba__before'), folder, 'before', W.before, title);
-    fill(card.querySelector('.ba__after'),  folder, 'after',  W.after,  title);
-  };
+  const load = card => { if (card._project.folder || card._project.media) fill(card._gal, card._project); };
   const lazy = 'IntersectionObserver' in window
     ? new IntersectionObserver((es, obs) => es.forEach(x => {
         if (x.isIntersecting){ obs.unobserve(x.target); load(x.target); }
       }), { rootMargin:'400px 0px' })
     : { observe: load };
 
+  /* סרטונים מתנגנים רק כשהגלריה שלהם נראית על המסך */
+  const onScreen = 'IntersectionObserver' in window
+    ? new IntersectionObserver(es => es.forEach(x => {
+        x.target._visible = x.isIntersecting;
+        x.target._update?.();
+      }), { threshold:.35 })
+    : { observe: g => { g._visible = true; } };
+
   W.projects.forEach(p => {
     const card = el('article', 'project');
     card.dataset.cat = p.category;
     card._project = p;
 
-    const ba = el('div', 'ba');
-    const after = el('div', 'ba__layer ba__after');
-    after.append(emptyFrame(W.after), el('span', 'ba__label', W.after));
-    const before = el('div', 'ba__layer ba__before');
-    before.append(emptyFrame(W.before), el('span', 'ba__label', W.before));
-    const handle = el('span', 'ba__handle');
-    handle.setAttribute('aria-hidden', 'true');
-    const range = el('input', 'ba__range');
-    Object.assign(range, { type:'range', min:0, max:100, value:50 });
-    range.setAttribute('aria-label', W.before + ' / ' + W.after + ': ' + p.title);
-    range.addEventListener('input', () => ba.style.setProperty('--pos', range.value + '%'));
-    ba.append(after, before, handle, range);
+    const gal = gallery(p);
+    card._gal = gal;
 
     const body = el('div', 'project__body');
     const meta = el('div', 'project__meta');
@@ -178,9 +266,10 @@ const el = (tag, cls, txt) => {
     body.append(meta, el('h3', 'project__title', p.title));
     if (p.text) body.append(el('p', 'project__text', p.text));
 
-    card.append(ba, body);
+    card.append(gal, body);
     host.append(card);
     lazy.observe(card);
+    onScreen.observe(gal);
   });
 
   /* סינון לפי תחום — רק תחומים שיש בהם פרויקטים מקבלים כפתור */
