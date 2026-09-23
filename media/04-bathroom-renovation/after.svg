@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="1600" height="1200">
+  <defs><pattern id="tile" width="34" height="34" patternUnits="userSpaceOnUse"><rect width="34" height="34" fill="#eef4fa"/><path d="M0 .5H34M.5 0V34" stroke="#c9d6e3"/></pattern></defs>
+  <polygon points="0,0 800,0 570,150 230,150" fill="#fbf8f2"/>
+  <polygon points="0,0 230,150 230,390 0,600" fill="#ece5d9"/>
+  <polygon points="800,0 570,150 570,390 800,600" fill="#f0eadf"/>
+  <rect x="230" y="150" width="340" height="240" fill="#f6f1e8"/>
+  <polygon points="230,390 570,390 800,600 0,600" fill="#d8d8d4"/>
+  <path d="M0 0 L230 150 H570 L800 0 M230 150 V390 H570 V150 M230 390 L0 600 M570 390 L800 600" stroke="#c9bfae" stroke-width="2" fill="none"/>
+  <path d="M250 390 L-12 600 M290 390 L97 600 M330 390 L207 600 M370 390 L317 600 M410 390 L427 600 M450 390 L537 600 M490 390 L647 600 M530 390 L757 600 M198 420 H602 M144 465 H656 M72 530 H728" stroke="#000" stroke-opacity=".12" stroke-width="1.5"/>
+  <path d="M230 382 H570" stroke="#e0d6c6" stroke-width="10"/>
+  <rect x="230" y="150" width="340" height="240" fill="url(#tile)"/>
+  <rect x="340" y="180" width="120" height="95" rx="6" fill="#e3eef8" stroke="#b9c7d4" stroke-width="3"/>
+  <rect x="300" y="300" width="200" height="82" rx="6" fill="#ffffff" stroke="#c9d3dc" stroke-width="2"/><ellipse cx="400" cy="306" rx="60" ry="10" fill="#e9eef2" stroke="#c9d3dc"/>
+  <path d="M400 282 V296 h14" stroke="#9aa6b1" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <rect x="170" y="552" width="460" height="30" rx="15" fill="#ffffff" fill-opacity=".85"/>
+  <text x="400" y="572" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#555">PLACEHOLDER — replace with media/04-bathroom-renovation/after.jpg</text>
+</svg>

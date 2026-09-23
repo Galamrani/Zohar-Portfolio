@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="1600" height="1200">
+  <defs>
+    <pattern id="blk" width="48" height="24" patternUnits="userSpaceOnUse"><path d="M0 .5H48M0 12.5H48M.5 0V12M24.5 12V24" stroke="#a39c91" fill="none"/></pattern>
+    <pattern id="hatch" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V14" stroke="#000" stroke-opacity=".04" stroke-width="6"/></pattern>
+  </defs>
+  <polygon points="0,0 800,0 570,150 230,150" fill="#c9c4bb"/>
+  <polygon points="0,0 230,150 230,390 0,600" fill="#bcb6ab"/>
+  <polygon points="800,0 570,150 570,390 800,600" fill="#c3bdb2"/>
+  <rect x="230" y="150" width="340" height="240" fill="#d4cfc7"/>
+  <polygon points="230,390 570,390 800,600 0,600" fill="#aaa397"/>
+  <path d="M0 0 L230 150 H570 L800 0 M230 150 V390 H570 V150 M230 390 L0 600 M570 390 L800 600" stroke="#7a746a" stroke-width="2" fill="none"/>
+  <rect x="230" y="150" width="340" height="240" fill="url(#blk)"/>
+  <rect x="310" y="200" width="180" height="190" fill="none" stroke="#b5533c" stroke-width="2.5" stroke-dasharray="10 7"/>
+  <path d="M470 175 l-18 40 l14 20 l-22 45" stroke="#6f695f" stroke-width="2" fill="none"/>
+  <path d="M400 75 V185" stroke="#333" stroke-width="2"/><circle cx="400" cy="195" r="11" fill="#f4e7b5" stroke="#555" stroke-width="2"/>
+  <g stroke="#8a6a45" stroke-width="7" stroke-linecap="round"><path d="M120 590 L175 330 M185 595 L232 340"/></g>
+  <g stroke="#8a6a45" stroke-width="5"><path d="M131 540 H188 M142 488 H199 M153 436 H210 M164 384 H221"/></g>
+  <polygon points="520,470 600,440 690,470 660,500 560,505" fill="#8f887c"/><polygon points="600,500 640,480 700,500 680,520" fill="#9c958a"/>
+  <rect x="440" y="480" width="44" height="52" rx="4" fill="#d9d4cb" stroke="#7a746a" stroke-width="2"/>
+  <rect width="800" height="600" fill="url(#hatch)"/>
+  <rect x="170" y="552" width="460" height="30" rx="15" fill="#ffffff" fill-opacity=".85"/>
+  <text x="400" y="572" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#555">PLACEHOLDER — replace with media/06-home-extension/before.jpg</text>
+</svg>
